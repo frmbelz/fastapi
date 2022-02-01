@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}MDTF APIs{% endblock %}
+{% block head %}
+{{ super() }}
+
+{% endblock %}
+
+{% block page_content %}
+{% include 'include/sidebar.html' %}
+<div style="padding-bottom:70px; padding-left: 50px;">
+  <h2>
+      About Maryland Test Facility (MdTF)
+  </h2>
+  <br>
+  <p style="color: black;">The  Maryland Test Facility (MdTF) provides a controlled, reconfigurable environment suitable for comparing and contrasting technologies, observing and documenting human-device interactions, and measuring the impact of process changes on system and/or human performance.</p>
+  <p style="color: black;">The fully reconfigurable test area is capable of housing several different simulated operational concepts of operation in customizable bays. Test protocols are reviewed by an Independent Institutional Review Board (IRB) and demographics of the volunteer test subject pool are representative of the relevant operational environment. Additionally, apart from the testing space, the facility contains extensive instrumentation and observation capabilities. This allows for the capture of audio, visual, and other data required for analysis of throughput, accuracy, and usability.</p>
+  <img src="https://www.dhs.gov/sites/default/files/images/st/Web/ST/2021_st_mdtf2.jpg" alt="DHS Maryland Test Facility">
+  <img src="https://www.dhs.gov/sites/default/files/images/st/Web/ST/2021_st_mdtf3.jpg" alt="DHS Maryland Test Facility">
+</div>
+
+
+  <!--{{data.page}}-->
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+
+{% endblock %}
+

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}MDTF APIs{% endblock %}
+{% block head %}
+{{ super() }}
+
+{% endblock %}
+
+{% block page_content %}
+{% include 'include/sidebar.html' %}
+<div style="padding-left:50px" id="custom-forms">
+  <h2>
+      Welcome to MDTF Comparison of Images Match Scores Example.
+  </h2>
+  <br>
+  <!--{{data.page}}-->
+  <form id="single" name="single">
+    <p style="color:black;" >Compare an image's template and a list of templates. The result below will be a list of similarity scores for each image comparison.
+    <ul>
+      <li>Select one image from the first row</li>
+      <li>Select one or more images from the second row</li>
+      <li>Press 'Compare' button</li>
+      <li>The comparison match scores should display at the bottom</li>
+    </ul>
+    </p>
+    <h4 style="font-size: 1.20rem;">Select ONE (1) image to compare match scores with other images</h4>
+    <br>
+    <p>
+      <input type="radio" name="single" id="1png" value="1.png">
+        <img id="1png" src="{{ url_for('static', path='/images/1.png') }}">
+      <input type="radio" name="single" id="2png" value="2.png">
+        <img id="2png" src="{{ url_for('static', path='/images/2.png') }}">
+      <input type="radio" name="single" id="3png" value="3.png">
+        <img id="3png" src="{{ url_for('static', path='/images/3.png') }}">
+      <input type="radio" name="single" id="4png" value="4.png">
+        <img id="4png" src="{{ url_for('static', path='/images/4.png') }}">
+      <input type="radio" name="single" id="5png" value="5.png">
+        <img id="5png" src="{{ url_for('static', path='/images/5.png') }}">
+      <input type="radio" name="single" id="6png" value="6.png">
+        <img id="6png" src="{{ url_for('static', path='/images/6.png') }}">
+    </p>
+  </form>
+  <br>
+  <form id="compare-images" method="POST" onsubmit="return check();">
+    <h4 style="font-size: 1.20rem;">Select any number of the images to compare the match scores to the one selected above</h4>
+    <br>
+    <p>
+      <input type="checkbox" name="images[]" id="1png" value="1.png">
+        <img id="1png" src="{{ url_for('static', path='/images/1.png') }}">
+      <input type="checkbox" name="images[]" id="2png" value="2.png">
+        <img id="2png" src="{{ url_for('static', path='/images/2.png') }}">
+      <input type="checkbox" name="images[]" id="3png" value="3.png">
+        <img id="3png" src="{{ url_for('static', path='/images/3.png') }}">
+      <input type="checkbox" name="images[]" id="4png" value="4.png">
+        <img id="4png" src="{{ url_for('static', path='/images/4.png') }}">
+      <input type="checkbox" name="images[]" id="5png" value="5.png">
+        <img id="5png" src="{{ url_for('static', path='/images/5.png') }}">
+      <input type="checkbox" name="images[]" id="6png" value="6.png">
+        <img id="6png" src="{{ url_for('static', path='/images/6.png') }}">
+    </p>
+    <p><button class="button" id="clicksubmit" type="submit" name="Submit" onclick="check()">Compare</button></p>
+  </form>
+  <div style="padding-bottom:200px; display:flex; justify-content:start; align-items:baseline;">
+    <h4 style="font-size: 1.20rem;">The Match Score Results:</h4>
+    <span style="padding-left:70px;" id='result'>{{result}}</span>
+  </div>
+</div>
+<script type="text/javascript">
+
+  document.getElementById('compare-images').addEventListener('submit', check);
+
+  function check(e) {
+    e.preventDefault();
+ 
+    var send = { single: {} , templ_list: [] };
+    send.single = document.getElementById('single').querySelector('input[name="single"]:checked').value;
+    console.log("send.single: " + send.single);
+   
+    var checked = []
+    var images = document.forms['compare-images'].elements[ 'images[]' ];
+    console.log("number of images: " + images.length);
+    console.log("image 1 value: " + images[1].value);
+    console.log("image 1 checked: " + images[1].checked);
+    for (var i=0, len=images.length; i<len; i++) {
+      if (images[i].checked == true) {
+        send.templ_list.push(images[i].value);
+      }
+    }
+
+    console.log(send);
+    json = JSON.stringify(send);
+    console.log(json);
+    fetch("/compare-images", {
+      // Adding method type
+      method: "POST",
+
+      // Adding body or contents to send
+      body: JSON.stringify({
+          send
+      }),
+
+      // Adding headers to the request
+      headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-type": "application/json; charset=UTF-8"
+      }
+    })
+    // Converting to JSON
+    .then(response => response.json())
+    // Displaying results to console
+    //.then(json => console.log(json));
+      .then(function(json) {
+        console.log(json);
+        document.getElementById("result").innerHTML = json;
+      });
+
+    // GET request for /v1/info
+    /*fetch(/v1/info)
+        .then(function(response) {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error("Could not reach the API: " + response.statusText);
+            }
+        }).then(function(data) {
+            console.log(data);
+            document.getElementById("result").innerHTML = data;
+        }).catch(function(error) {
+            document.getElementById("result").innerHTML = error.message;
+        });*/
+  };
+</script>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+
+{% endblock %}
