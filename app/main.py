@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 import json
 from pathlib import Path
 from pprint import pprint
+from typing import List
 
 app = FastAPI()
 client = http3.AsyncClient()
@@ -52,7 +53,7 @@ async def get_template(img: str):
     response = await client.post(url, json=data )
     return response.text
 
-@app.post("/v1/create-template{imgName}")
+@app.post("/v1/create-template")
 async def create_template(imgName: str = Query(
             ...,
             alias = "imgName",
@@ -67,7 +68,7 @@ async def create_template(imgName: str = Query(
 async def post_compare(compare_json: {}):
     url = "http://localhost:8080/v1/compare-list"
     # sample format to send to API
-    #data = {
+    # data = {
     #        "SingleTemplate": 
     #            {
     #                "Template":"LTExMTAxMTAwMDAwMTEwMTAxMTAwMTAxMTEwMTAwMDA="
@@ -94,27 +95,44 @@ async def build_compare(single_templ: str, templ_list: []):
     data = '{"SingleTemplate" : '+single_templ+', "TemplateList" : ['+combined_str+']}'
     return data
 
+async def build_json(single_templ: str, templ_list: []):
+    combined_str = ''
+    list_len = len(templ_list)
+    i = 1
+    for item in templ_list:
+        combined_str += '{"Template":"'+str(item)+'"}'
+        if i < list_len: combined_str += ", "
+        i += 1
+
+    data = '{"SingleTemplate" : {"Template":"'+single_templ+'"}, "TemplateList" : ['+combined_str+']}'
+    return data
+
 @app.post("/v1/compare-list")
-async def compare_list():
-    
-    response = await post_compare()
+async def compare_list(singleTemplate: str = Query(
+            ...,
+            alias = "singleTemplate",
+            title = "Single Template",
+            description = "singleTemplate parameter - LTExMTAwMTAxMDEwMTExMTAwMTAxMDExMDAwMDEx",
+            ),
+            templateList: List[str] = Query(
+            ...,
+            alias = "templateList",
+            title = "Template List",
+            description = "templateList parameter - ['LTExMTAwMTAxMDEwMTExMTAwMTAxMDExMDAwMDEx', 'MTExMTAxMTExMDEwMTExMDEwMDEwMTAxMTAxMDEx']",
+            ),
+        ):
+    json_str = await build_json(singleTemplate, templateList)
+    response = await post_compare(json_str)
     return response
 
 @app.post("/compare-images", include_in_schema=False)
 async def compare_images(request: Request):
-    print("in compare-images")
     checked_images = await request.json()
-    print(checked_images)
     single_img = checked_images['send']['single']
     template_list = []
     for img in checked_images['send']['templ_list']:
-        print(img)
         templ = await get_template(img)
-        print(templ)
         template_list.append(templ)
-    print("all templates in an array")
-    print(template_list)
-    print("single: " + single_img)
     single_template = await get_template(single_img)
     json_str = await build_compare(single_template, template_list)
     scores = await post_compare(json_str)
