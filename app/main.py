@@ -1,21 +1,22 @@
 from typing import Optional
 import base64
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse
 import http3
 import pydantic
 import os
+from os import path
 import requests
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import json
+from pathlib import Path
+from pprint import pprint
 
 app = FastAPI()
 client = http3.AsyncClient()
 
 
-from pathlib import Path
-from pprint import pprint
 BASE_DIR = Path(__file__).resolve().parent
 #print(BASE_DIR)
 #direct = str(Path(BASE_DIR, 'templates'))
@@ -35,27 +36,32 @@ async def read_info():
     response = await get_info("http://127.0.0.1:8080/v1/info")
     return response
 
-# debugging the reading of a file
 #cwd = os.getcwd()
 #files = os.listdir(cwd)
 
 async def get_template(img: str):
-    print("image: " + img)
     url = "http://127.0.0.1:8080/v1/create-template"
     image_path = static_dir + "/images/" + img
-    print("image path: " + image_path)
+
+    if not path.isfile(image_path):
+        raise HTTPException(status_code=404, detail="Item not found")
+
     encoded = base64.b64encode(open(image_path, "rb").read())
     # remove leading b in front of a string
     data = {"ImageData": encoded.decode('utf-8')}
-
     response = await client.post(url, json=data )
     return response.text
 
-@app.post("/v1/create-template")
-async def create_template(request: Request):
-    checked_images = await request.json()
-    print(checked_images)
-    response = await get_template()
+@app.post("/v1/create-template{imgName}")
+async def create_template(imgName: str = Query(
+            ...,
+            alias = "imgName",
+            title = "Create Template",
+            description = "imgName parameter - image name, for example, 1.png,.. 6.png",
+            min_length = 4,
+            max_length = 50,
+            )):
+    response = await get_template(imgName)
     return response
 
 async def post_compare(compare_json: {}):
@@ -95,7 +101,7 @@ async def compare_list():
     return response
 
 @app.post("/compare-images", include_in_schema=False)
-async def create_template(request: Request):
+async def compare_images(request: Request):
     print("in compare-images")
     checked_images = await request.json()
     print(checked_images)
